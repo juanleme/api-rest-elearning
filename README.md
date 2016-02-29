@@ -1,6 +1,3 @@
-### Feedback appreciated 
-Contact me on [GitHub]
-
 ### License
 MIT
 

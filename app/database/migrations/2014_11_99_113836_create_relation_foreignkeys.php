@@ -21,6 +21,17 @@ class CreateRelationForeignkeys extends Migration {
         {
             $table->foreign('user_id')->references('_id')->on('users');
         });
+
+        Schema::table('videos', function($table)
+        {
+            $table->foreign('course_id')->references('_id')->on('courses');
+        });
+
+        Schema::table('users_videos', function($table)
+        {
+            $table->foreign('user_id')->references('_id')->on('users');
+            $table->foreign('video_id')->references('_id')->on('videos');
+        });
 	}
 
 	/**
