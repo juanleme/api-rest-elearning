@@ -43,12 +43,15 @@ Route::group(array('prefix' => 'api'), function(){
 
     Route::resource('users', 'UserController', array('only' => array('index', 'store')));
 
-    Route::resource('courses', 'CourseController', array('only' => array('index')));
-
     //	User needs to have a registered and active token
     Route::group(array('before' => 'logged_in'), function() {
 
         Route::get('users/sessions', array('as' => 'api.users.sessions', 'uses' => 'UserController@sessions'));
+
+        Route::resource('courses', 'CourseController', array('only' => array('index')));
+
+        Route::get('course/{id}/videos', array('as' => 'api.courses.videos', 'uses' => 'CourseController@videos'));
+
 
         Route::group(array('prefix' => 'users/{users}'), function() {
 

@@ -50,7 +50,7 @@ class UserController extends BaseController {
 
 			$user = User::where('email', '=', $input['email'])->first();
 			if ( !($user instanceof User) ) {
-				return ApiResponse::json("User is not registered.");
+				return ApiResponse::json("User is not registered.", '202');
 			}
 			
 			if ( Hash::check( $input['password'] , $user->password) ) {
@@ -65,9 +65,9 @@ class UserController extends BaseController {
 				Log::info('<!> Logged : '.$token->user_id.' on '.$token->device_os.'['.$token->device_id.'] with token '.$token->key);
 				
 				$token->user = $user->toArray();
-				$token = ApiResponse::json($token, '202');
+				$token = ApiResponse::json($token);
 			}
-			else $token = ApiResponse::json("Incorrect password.", '412');
+			else $token = ApiResponse::json("Incorrect password.", '202');
 			
 			return $token;
 		}
@@ -142,21 +142,21 @@ class UserController extends BaseController {
 	 */
 	public function logout( $user ) {
 
-		if ( !Input::has('token') ) return ApiResponse::json('No token given.');
+		if ( !Input::has('token') ) return ApiResponse::json('Acesso negado, token não disponível', '202');
 
 		$input_token = Input::get('token');
 		$token = Token::where('key', '=', $input_token)->first();
 
-		if ( empty($token) ) return ApiResponse::json('No active session found.');
+		if ( empty($token) ) return ApiResponse::json('No active session found.', '202');
 
-		if ( $token->user_id !== $user->_id ) return ApiResponse::errorForbidden('You do not own this token.');
+		if ( $token->user_id !== $user->_id ) return ApiResponse::errorForbidden('Acesso negado, token inválido', '202');
 
 		if ( $token->delete() ){
 			Log::info('<!> Logged out from : '.$input_token );
-			return ApiResponse::json('User logged out successfully.', '202');
+			return ApiResponse::json('O usuário foi deslogado com sucesso.');
 		}	
 		else
-			return ApiResponse::errorInternal('User could not log out. Please try again.');
+			return ApiResponse::errorInternal('Não foi possível remover a sessão.', '500');
 
 	}
 
@@ -165,11 +165,11 @@ class UserController extends BaseController {
 	 */
 	public function sessions() {
 
-		if ( !Input::has('token') ) return ApiResponse::json('No token given.');
+		if ( !Input::has('token') ) return ApiResponse::json('Acesso negado, token não disponível.', '202');
 
 		$user = Token::userFor ( Input::get('token') );
 
-		if ( empty($user) ) return ApiResponse::json('User not found.');
+		if ( empty($user) ) return ApiResponse::json('Usuário não encontrado.', '202');
 
 		$user->sessions;
 
@@ -196,9 +196,9 @@ class UserController extends BaseController {
 			}
 
 			if ( $sent )
-				return ApiResponse::json('Email sent successfully.');
+				return ApiResponse::json('Email enviado com sucesso.');
 			else
-				return ApiResponse::json('An error has occured, the Email was not sent.', 500);
+				return ApiResponse::json('Ocorrou um erro, não foi possível enviar o e-mail.', 500);
 		}
 		else {
 			return ApiResponse::validation($validator);
@@ -217,14 +217,14 @@ class UserController extends BaseController {
 			$user = User::where('email', $input['email'])->first();
 
 			if ( !($reset instanceof ResetKey) )
-				return ApiResponse::errorUnauthorized("Invalid reset key.");
+				return ApiResponse::errorUnauthorized("Chave inválida.", '202');
 
 			if ( $reset->user_id != $user->_id )
-				return ApiResponse::errorUnauthorized("Reset key does not belong to this user.");
+				return ApiResponse::errorUnauthorized("Chave inválida.", '202');
 
 			if ( $reset->isExpired() ) {
 				$reset->delete();
-				return ApiResponse::errorUnauthorized("Reset key is expired.");
+				return ApiResponse::errorUnauthorized("Chave expirada, solicite uma nova chave.", '202');
 			}
 
 			$user = $reset->user;
@@ -234,7 +234,7 @@ class UserController extends BaseController {
 
 			$reset->delete();
 
-			return ApiResponse::json('Password reset successfully!');
+			return ApiResponse::json('Password resetado com sucesso!');
 		}
 		else {
 			return ApiResponse::validation($validator);
@@ -253,7 +253,7 @@ class UserController extends BaseController {
 
 	public function missingMethod( $parameters = array() )
 	{
-	    return ApiResponse::errorNotFound('Sorry, no method found');
+	    return ApiResponse::errorNotFound('Desculpe, método não encontrado');
 	}
 
 }
