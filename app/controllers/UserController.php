@@ -27,7 +27,7 @@ class UserController extends BaseController {
 			$user->password 			= Hash::make( $input['password'] );
 
 			if ( !$user->save() )
-				$user = ApiResponse::errorInternal('An error occured. Please, try again.');
+				$user = ApiResponse::errorInternal('Ocorreu um erro, por favor tente novamente.');
 
 		}
 		else {
@@ -50,7 +50,7 @@ class UserController extends BaseController {
 
 			$user = User::where('email', '=', $input['email'])->first();
 			if ( !($user instanceof User) ) {
-				return ApiResponse::json("User is not registered.", '202');
+				return ApiResponse::json("Usuário não cadastrado.", '202');
 			}
 			
 			if ( Hash::check( $input['password'] , $user->password) ) {
@@ -61,13 +61,13 @@ class UserController extends BaseController {
 
 				$token = $user->login( $device_id, $device_type, $device_token );
 
-				Log::info('<!> Device Token Received : '. $device_token .' - Device ID Received : '. $device_id .' for user id: '.$token->user_id);
-				Log::info('<!> Logged : '.$token->user_id.' on '.$token->device_os.'['.$token->device_id.'] with token '.$token->key);
+				Log::info('<!> Device Token recebido : '. $device_token .' - Device ID recebido : '. $device_id .' para o id de usuário: '.$token->user_id);
+				Log::info('<!> Logged : '.$token->user_id.' em '.$token->device_os.'['.$token->device_id.'] com o token '.$token->key);
 				
 				$token->user = $user->toArray();
 				$token = ApiResponse::json($token);
 			}
-			else $token = ApiResponse::json("Incorrect password.", '202');
+			else $token = ApiResponse::json("Senha incorreta.", '202');
 			
 			return $token;
 		}
@@ -147,7 +147,7 @@ class UserController extends BaseController {
 		$input_token = Input::get('token');
 		$token = Token::where('key', '=', $input_token)->first();
 
-		if ( empty($token) ) return ApiResponse::json('No active session found.', '202');
+		if ( empty($token) ) return ApiResponse::json('Sessão não encontrada.', '202');
 
 		if ( $token->user_id !== $user->_id ) return ApiResponse::errorForbidden('Acesso negado, token inválido', '202');
 
